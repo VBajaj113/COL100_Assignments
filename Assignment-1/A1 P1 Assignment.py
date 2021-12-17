@@ -1,9 +1,10 @@
 ### COL Assignment 1 ###
 #----------------------#
 
+
 #Part 1:
 
-#Half Adder
+#Half Adder -- Helper for Full Adder
 def hadd(a,b):
     #Addition of 2 bits
 
@@ -14,7 +15,7 @@ def hadd(a,b):
     #Returns: 2 element Tuple -- Boolean elements representing the bits
     #         of sum of a and b in reverse order
     
-    #Cases
+    #Logic:
     # 0 + 0 = 00
     # 1 + 0 = 01
     # 0 + 1 = 01
@@ -38,8 +39,7 @@ def add(a,b,c):
     #Returns: 2 Element Tuple with Boolean elements representing the bits
     #         of sum a+b+c in reverse order
 
-    #Explanation:
-    #Considering all the cases:
+    #Logic:
     # 00 + 0 = 00
     # 00 + 1 = 01
     # 01 + 0 = 01
@@ -53,7 +53,7 @@ def add(a,b,c):
     (bc1,bc2)=hadd(b,c)     #bc1 = b XOR c, bc2 = b AND c
     (ca1,ca2)=hadd(c,a)     #ca1 = c XOR a, ca2 = c AND a
     
-    (r0,r1)=hadd(c,ab1)     #r0 = ab1 XOR c = ((a XOR b) XOR c), r1 = ab1 AND c)
+    (r0,r1)=hadd(c,ab1)     #r0 = ab1 XOR c = (a XOR b) XOR c; r1 = ab1 AND c
     
     return (bool(r0),bool(ab2 or ca2 or bc2))
 
@@ -69,12 +69,14 @@ def add4(a0,a1,a2,a3, b0,b1,b2,b3, c):
     #             c : boolean -- carry bit
 
     #Returns: 5 element Tuple with Boolean elements representing the bits of
-    #         sum a3a2a1a0 + b3b2b1b0 + c in reverse order
+    #         the sum a3a2a1a0 + b3b2b1b0 + c in reverse order
+
+    #Logic: Repeatedly call the full adder function and update the carry bit.
     
-    (r0,c)=add(a0,b0,c)
-    (r1,c)=add(a1,b1,c)
-    (r2,c)=add(a2,b2,c)
-    (r3,c)=add(a3,b3,c)
+    (r0,c) = add(a0,b0,c)
+    (r1,c) = add(a1,b1,c)
+    (r2,c) = add(a2,b2,c)
+    (r3,c) = add(a3,b3,c)
     
     return (r0,r1,r2,r3,c)
 
@@ -90,6 +92,14 @@ def cmp(a0,a1,a2,a3, b0,b1,b2,b3):
 
     #Returns: Boolean -- Whether a3a2a1a0 > b3b2b1b0 or not
 
+    #Logic: For each group (ai, bi) in the order i=3 to i=0:
+    #1) Find XOR of the two.
+    #2) If XOR is 0, then move to next group as both the bits are same.
+    #   If there is no next group, then both the numbers are same, so return False.
+    #3) If XOR isn't 0, then there are 2 cases, either a==True, or a==False.
+    #   If a==True ==> b==False, so return True ==> return a
+    #   If a==False ==> b==True, so return False ==> return a
+
     if bool((a3 or b3) and not (a3 and b3)):
             return bool(a3)
     if bool((a2 or b2) and not (a2 and b2)):
@@ -102,7 +112,7 @@ def cmp(a0,a1,a2,a3, b0,b1,b2,b3):
 
 
 
-#Singe Bit Subtractor
+#Singe Bit Subtractor -- Helper for sub4
 def sub(a1, b1, b):
     #Subtracts the two bits including the effect of borrow
 
@@ -111,8 +121,14 @@ def sub(a1, b1, b):
     #b1 : boolean -- the second bit
 
     #Returns: 2 element Tuple with Boolean elements, the first element representing
-    #         the subtraction and borrowing (a1-b1-b), and the second element contains the
+    #         the subtraction a1-b1-b, and the second element contains the
     #         updated borrow for the next subtraction
+
+    #Logic:
+    #There are 8 cases to consider, b == 0 or 1, a1==b1 or a1!=b1, and a1>b1 or a1<b1 
+    #XOR will separate them on the basis of a1==b1.
+    #Then using if else for checking whether b == 0 or 1
+    #Then using comparator for checking whether b1>a1 or not to update borrow
     
     if bool((a1 or b1) and not (a1 and b1)):
         if b:
@@ -148,13 +164,15 @@ def sub4(a0,a1,a2,a3, b0,b1,b2,b3):
 
     #Returns: 5 element Tuple with boolean elements representing the signed result
     #         of the subtraction a3a2a1a0-b3b2b1b0 in reverse order
+
+    #Logic: Use the sub fuction and update the borrow for next multiplication
     
-    s=cmp(a0,a1,a2,a3, b0,b1,b2,b3)
-    b=0
+    s=cmp(a0,a1,a2,a3, b0,b1,b2,b3)     #Comparing which number is bigger
+    b=0                                 #Initialising the borrow digit
     
-    if s:
-        (r0,b)=sub(a0,b0,b)
-        (r1,b)=sub(a1,b1,b)
+    if s:                               #If s==True, then perform a-b, else b-a
+        (r0,b)=sub(a0,b0,b)             
+        (r1,b)=sub(a1,b1,b)             
         (r2,b)=sub(a2,b2,b)
         (r3,b)=sub(a3,b3,b)
 
@@ -164,8 +182,8 @@ def sub4(a0,a1,a2,a3, b0,b1,b2,b3):
         (r2,b)=sub(b2,a2,b)
         (r3,b)=sub(b3,a3,b)
 
-    if r0 or r1 or r2 or r3:
-        return (r0, r1, r2, r3, not s)
+    if r0 or r1 or r2 or r3:            #Extra case when all are equal, then according
+        return (r0, r1, r2, r3, not s)  #to convention, the signed bit should be False
     else:
         return (r0, r1, r2, r3, s)
 
@@ -187,34 +205,48 @@ def add8(a, b, c):
     #Returns: 2 element Tuple -- Element 1 represent the sum a+b+c in Tuple format with
     #         with boolean elemnts representing the digits of sum in reverse order, and
     #         the second element representing the updated carry bit.
+
+    #Logic: Use the add4 twice to sum digits in groups of 4 and update the carry bit
+    
     (a0,a1,a2,a3,a4,a5,a6,a7) = a
     (b0,b1,b2,b3,b4,b5,b6,b7) = b
     
-    (r0,r1,r2,r3,c)=add4(a0,a1,a2,a3,b0,b1,b2,b3,c)
-    (r4,r5,r6,r7,c)=add4(a4,a5,a6,a7,b4,b5,b6,b7,c)
+    (r0,r1,r2,r3,c) = add4(a0,a1,a2,a3,b0,b1,b2,b3,c)
+    (r4,r5,r6,r7,cout) = add4(a4,a5,a6,a7,b4,b5,b6,b7,c)
 
-    return ((r0,r1,r2,r3,r4,r5,r6,r7),c)
+    s = (r0,r1,r2,r3,r4,r5,r6,r7)   #the final sum
 
+    return (s,cout)
 
-
-def mul2(a,b):
-        if cmp(0,0,0,b, 0,0,0,0):
-            return a
-        else:
-            return 0
         
 
-
+#Multiplier
 def mul4(a,b):
+    #Multiply two 4 bit numbers
+
+    #Parameters:
+    #a : 4 element Tuple -- Boolean elements representing the digits in reverse order
+    #b : 4 element Tuple -- Boolean elements representing the digits in reverse order
+
+    #Returns: 8 element Tuple with boolean elements representing the digits of
+    #         product a*b in reverse order
+
+    #Logic: If b=0, return 0, Else use recursion and return a+mul4(a,b-1)
+    #       For getting b-1, use sub4. For adding a and mul4(a,b-1), use add8
+    
     (a0,a1,a2,a3) = a
     (b0,b1,b2,b3) = b
-    s = (0,0,0,0,0,0,0,0)
-    if cmp(0,0,0,b3,0,0,0,0):
-        (s,r) = add8(s,(0,0,0,a0,a1,a2,a3,0),0)
-    if cmp(0,0,0,b2,0,0,0,0):
-        (s,r) = add8(s,(0,0,a0,a1,a2,a3,0,0),0)
-    if cmp(0,0,0,b1,0,0,0,0):
-        (s,r) = add8(s,(0,a0,a1,a2,a3,0,0,0),0)
-    if cmp(0,0,0,b0,0,0,0,0):
-        (s,r) = add8(s,(a0,a1,a2,a3,0,0,0,0),0)
-    return s
+    
+    if b0 or b1 or b2 or b3:                        #if any one is non zero
+        
+        a_new=(a0,a1,a2,a3,0,0,0,0)                 #Make 'a' to be 8 bit for using add8
+
+        (b0,b1,b2,b3,k) = sub4(b0,b1,b2,b3,1,0,0,0) #subtracting 1 from b
+        
+        m = mul4(a,(b0,b1,b2,b3))                   #Recursion
+        
+        (r,c)=add8(a_new,m,0)
+        
+        return r
+    else:
+        return (False,False,False,False,False,False,False,False)
