@@ -1,6 +1,7 @@
 ### COL Assignment 1 ###
 #----------------------#
 
+rem = 2         #Entry Number 2021CS50126
 
 #Part 1:
 
