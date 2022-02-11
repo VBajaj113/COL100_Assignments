@@ -1,3 +1,5 @@
+import sys
+
 DATA = []
 BINARY_OPERATOR = ["+","-","*","/",">","<",">=","<=","==","!=","and","or"]
 UNARY_OPERATOR = ["-","not"]
@@ -50,7 +52,7 @@ def INTERPRET(expression, DATA):
             except:
                 index=ispresentintuple(DATA,term)
                 if index==-1:
-                    return " ".join(["Error: variable",term,"is not defined"])
+                    sys.exit("".join(["Error: variable '",term,"' is not defined"]))
                 else:
                     expression[i]=str(DATA[DATA[index][1]])
     
@@ -76,11 +78,23 @@ def INTERPRET(expression, DATA):
 lines = [] # initalise to empty list
 with open('D:\IITD\Current\COL100\Assignment\input_file.txt') as f:
     lines = f.readlines() # read all lines into a list of strings
-print (lines)
+
 for statement in lines: # each statement is on a separate line
     token_list = statement.split() # split a statement into a list of tokens
-    print ("Tokens: ", token_list)
     if INTERPRET(token_list,DATA)!="next":
         break
 # now process each statement
-print(DATA)
+
+GARBAGE = []
+USED_INDEX = []
+for i in range(len(DATA)):
+    try:
+        print(DATA[i][0],"=",DATA[DATA[i][1]])
+        USED_INDEX.extend([i,DATA[i][1]])
+    except:
+        continue
+
+for i in range(len(DATA)):
+    if i not in USED_INDEX:
+        GARBAGE.append(DATA[i])
+print(GARBAGE)
