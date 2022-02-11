@@ -1,63 +1,86 @@
 DATA = []
+BINARY_OPERATOR = ["+","-","*","/",">","<",">=","<=","==","!=","and","or"]
+UNARY_OPERATOR = ["-","not"]
 
-def ispresentintbool(DATA,element):
-    i=0
-    while i<len(DATA):
+def ispresentbool(DATA,element):
+    for i in range(len(DATA)):
+        if DATA[i]==element and type(DATA[i])==bool:
+            return i
+    return -1
+
+def ispresentint(DATA,element):
+    for i in range(len(DATA)):
         if DATA[i]==element:
-            return True,i
-        i+=1
-    return False,-1
+            return i
+    return -1
 
 def ispresentintuple(DATA, element):
-    i=0
-    while i<len(DATA):
+    for i in range(len(DATA)):
         try:
             if DATA[i][0]==element:
-                return True,i
+                return i
         except:
             continue
-        i+=1
-    return False,-1
+    return -1
 
-def INTERPRET(token, DATA):
-    if len(token)==3:
-        new_var = token[0]
-        term1=token[2]
+def INTERPRET(expression, DATA):
+    new_var = expression[0]
+    for i in range(2,len(expression)):
+        term = expression[i]
+        bool=False
 
-        checkterm = ispresentintuple(DATA,term1)
-        if checkterm[0]:
-            checkvar = ispresentintuple(DATA, new_var)
-            if checkvar[0]:
-                DATA[checkvar[1]]=(new_var,DATA[checkterm[1]][1])
-            else:                
-                DATA.append((new_var,DATA[checkterm[1]][1]))
-        else:    
-            answer = ["Error:", term1, "is not defined yet."]
-            return " ".join(answer)
+        if term in UNARY_OPERATOR or term in BINARY_OPERATOR:
+            continue
+
+        elif  term=="True":
+            bool=True
+            if ispresentbool(DATA,True)==-1:
+                DATA.append(True)
+
+        elif term=="False":
+            bool=True
+            if ispresentbool(DATA,False)==-1:
+                DATA.append(False)
+
+        else:
+            try:
+                term=int(term)
+                if ispresentint(DATA,term)==-1:
+                    DATA.append(term)
+            except:
+                index=ispresentintuple(DATA,term)
+                if index==-1:
+                    return " ".join(["Error: variable",term,"is not defined"])
+                else:
+                    expression[i]=str(DATA[DATA[index][1]])
     
-    elif len(token)==4:
-        new_var=token[0]
-        term1=token[3]
+    value = eval("".join(expression[2:]))
+    index=ispresentintuple(DATA,new_var)
+    if bool:
+        index2=ispresentbool(DATA,value)
+    else:
+        index2=ispresentint(DATA,value)
+    
+    if index2==-1:
+        DATA.append(value)
+        index2=len(DATA)-1
+    
+    if index==-1:
+        DATA.append((new_var,index2))
+    else:
+        DATA[index]=(new_var,index2)
 
-        try:
-            term1=int(term1)
-            value=eval(token[2]+token[3])
-            checkterm=ispresentintbool(DATA,term1)
-            if not checkterm[0]:
-                DATA.append(term1)
-            checkvalue=ispresentintbool(DATA,value)
-            checkvar=ispresentintuple(DATA,new_var)
-            if not checkvalue[0]:
-                DATA.append(value)
-                if checkvar[0]:
-                    DATA[checkvar[1]]=(new_var,len(DATA)-1)
-                else:
-                    DATA.append((new_var,len(DATA)-1))
-            else:
-                if checkvar[0]:
-                    DATA[checkvar[1]]=(new_var,checkvalue[1])
-                else:
-                    DATA.append((new_var,len(DATA)-1))
-                
-        except:
+    return "next"
 
+
+lines = [] # initalise to empty list
+with open('D:\IITD\Current\COL100\Assignment\input_file.txt') as f:
+    lines = f.readlines() # read all lines into a list of strings
+print (lines)
+for statement in lines: # each statement is on a separate line
+    token_list = statement.split() # split a statement into a list of tokens
+    print ("Tokens: ", token_list)
+    if INTERPRET(token_list,DATA)!="next":
+        break
+# now process each statement
+print(DATA)
