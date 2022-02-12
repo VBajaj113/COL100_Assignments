@@ -55,8 +55,11 @@ def INTERPRET(expression, DATA):
                     sys.exit("".join(["Error: variable '",term,"' is not defined"]))
                 else:
                     expression[i]=str(DATA[DATA[index][1]])
-    
-    value = eval("".join(expression[2:]))
+    try:
+        value = eval("".join(expression[2:]))
+    except:
+        sys.exit("Error: Please enter the expression in the specified syntax")
+
     index=ispresentintuple(DATA,new_var)
     if bool:
         index2=ispresentbool(DATA,value)
@@ -72,8 +75,7 @@ def INTERPRET(expression, DATA):
     else:
         DATA[index]=(new_var,index2)
 
-    return "next"
-
+    return
 
 lines = [] # initalise to empty list
 with open('D:\IITD\Current\COL100\Assignment\input_file.txt') as f:
@@ -81,8 +83,8 @@ with open('D:\IITD\Current\COL100\Assignment\input_file.txt') as f:
 
 for statement in lines: # each statement is on a separate line
     token_list = statement.split() # split a statement into a list of tokens
-    if INTERPRET(token_list,DATA)!="next":
-        break
+    INTERPRET(token_list,DATA)
+
 # now process each statement
 
 GARBAGE = []
