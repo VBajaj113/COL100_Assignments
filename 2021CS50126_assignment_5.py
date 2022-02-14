@@ -1,7 +1,7 @@
 import sys
 
 DATA = []
-BINARY_OPERATOR = ["+","-","*","/",">","<",">=","<=","==","!=","and","or"]
+BINARY_OPERATOR = ["+","-","*","/",">","<",">=","<=","==","!=","and","or","//"]
 UNARY_OPERATOR = ["-","not"]
 
 def ispresentbool(DATA,element):
@@ -26,6 +26,15 @@ def ispresentintuple(DATA, element):
     return -1
 
 def INTERPRET(expression, DATA):
+    #Errors
+    if len(expression)>5 or len(expression)<3:
+        sys.exit("Error: Please enter the expression in the specified syntax")
+    elif len(expression)==4 and expression[2] not in UNARY_OPERATOR:
+        sys.exit("Error: Please enter the expression in the specified syntax")
+    elif len(expression)==5 and (expression[3] not in BINARY_OPERATOR or expression[2] in BINARY_OPERATOR \
+        or expression[4] in BINARY_OPERATOR):
+        sys.exit("Error: Please enter the expression in the specified syntax")
+    
     new_var = expression[0]
     for i in range(2,len(expression)):
         term = expression[i]
@@ -56,10 +65,9 @@ def INTERPRET(expression, DATA):
                 else:
                     expression[i]=str(DATA[DATA[index][1]])
     try:
-        value = eval("".join(expression[2:]))
+        value = eval(" ".join(expression[2:]))
     except:
         sys.exit("Error: Please enter the expression in the specified syntax")
-
     index=ispresentintuple(DATA,new_var)
     if bool:
         index2=ispresentbool(DATA,value)

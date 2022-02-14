@@ -1,5 +1,7 @@
-z = 1 + 2
-y = z + 1
-x = y
-x = True
-y = False
+x = 2 > 3
+y = 2 - 3
+z = 8 // 3
+x = 2 < 3
+y = not x
+z = x or y
+z = z and x
