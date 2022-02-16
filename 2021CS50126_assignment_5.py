@@ -29,6 +29,8 @@ def INTERPRET(expression, DATA):
     #Errors
     if len(expression)>5 or len(expression)<3:
         sys.exit("Error: Please enter the expression in the specified syntax")
+    elif expression[1] != "=":
+        sys.exit("Error: Please enter the expression in the specified syntax")
     elif len(expression)==4 and expression[2] not in UNARY_OPERATOR:
         sys.exit("Error: Please enter the expression in the specified syntax")
     elif len(expression)==5 and (expression[3] not in BINARY_OPERATOR or expression[2] in BINARY_OPERATOR \
@@ -40,14 +42,14 @@ def INTERPRET(expression, DATA):
         term = expression[i]
         bool=False
 
-        if term in UNARY_OPERATOR or term in BINARY_OPERATOR:
+        if term=="/":
+            expression[i]="//"
+        elif term in UNARY_OPERATOR or term in BINARY_OPERATOR:
             continue
-
         elif  term=="True":
             bool=True
             if ispresentbool(DATA,True)==-1:
                 DATA.append(True)
-
         elif term=="False":
             bool=True
             if ispresentbool(DATA,False)==-1:
@@ -66,8 +68,11 @@ def INTERPRET(expression, DATA):
                     expression[i]=str(DATA[DATA[index][1]])
     try:
         value = eval(" ".join(expression[2:]))
+    except ZeroDivisionError:
+        sys.exit("Error: Trying to divide by 0")
     except:
         sys.exit("Error: Please enter the expression in the specified syntax")
+
     index=ispresentintuple(DATA,new_var)
     if bool:
         index2=ispresentbool(DATA,value)
@@ -92,8 +97,6 @@ with open('D:\IITD\Current\COL100\Assignment\input_file.txt') as f:
 for statement in lines: # each statement is on a separate line
     token_list = statement.split() # split a statement into a list of tokens
     INTERPRET(token_list,DATA)
-
-# now process each statement
 
 GARBAGE = []
 USED_INDEX = []
