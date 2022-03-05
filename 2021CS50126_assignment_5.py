@@ -25,6 +25,12 @@ def ispresentintuple(DATA, element):    #Checks whether element is present in a 
             continue
     return -1
 
+def variablecheck(s):       #Checks whether name of variable contains only letters
+    for i in s:
+        if ord(i)<65 or ord(i)>122 or (ord(i)>90 and ord(i)<97):
+            return False
+    return True
+
 def INTERPRET(expression, DATA):
     #Interprets the expressions
 
@@ -40,6 +46,8 @@ def INTERPRET(expression, DATA):
         exit("Error: Please enter the expression in the specified syntax")
     
     new_var = expression[0] #Represents the variable
+    if not variablecheck(new_var):
+        exit("Error: Variable name '"+new_var+"' not allowed")    #Checks variable name is allowed
 
     for i in range(2,len(expression)):
         #Changes the variable in the expression to strings type indicating its value
