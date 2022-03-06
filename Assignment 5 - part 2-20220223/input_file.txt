@@ -1,0 +1,7 @@
+#snippet of class instruction can be - 
+class instruction:
+    def __init__(self, type_statement, addr = -1):
+        self.type = BLE/ADD/SUB/DIV/ASSIGN
+        self.operand = []
+        if addr > -1:
+            self.destination_addr = addr

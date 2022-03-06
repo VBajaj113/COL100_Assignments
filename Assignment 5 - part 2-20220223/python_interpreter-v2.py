@@ -1,5 +1,5 @@
 lines = [] # initalise to empty list
-with open('c:/Users/DELL/Desktop/Python/a.txt') as f:
+with open('D:\IITD\Current\COL100\Assignment\input_file.txt') as f:
     lines = f.readlines() # read all lines into a list of strings
 print (lines)
 for statement in lines: # each statement is on a separate line
