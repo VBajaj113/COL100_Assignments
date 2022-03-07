@@ -23,14 +23,23 @@ def while_help(token_list, lines, INSTRUCTION, i):
     nested = 0
     INSTRUCTION.append(token_list)
 
-    j=i+1
+    j = i + 1
     while j < n:
         if TABS[j] > TABS[i]:
             if lines[j].split()[0] == "while":
                 nested+=1
+        else:
+            break
+        j += 1
+                
+    j = i + 1
+    while j < n:
+        if TABS[j] > TABS[i]:
+            if lines[j].split()[0] == "while":
                 j = while_help(lines[j].split(),lines, INSTRUCTION, j)
                 if TABS[j]<=TABS[i]:
-                    INSTRUCTION[i][-1]=str(1+j+nested)
+                    INSTRUCTION[i][-1]=str(1+len(INSTRUCTION))
+                    INSTRUCTION.append(["branch", str(i)])
                     return j
             else:
                 INSTRUCTION.append(lines[j].split())
@@ -115,7 +124,7 @@ while i<n:
     fterm = token_list[0]
 
     if fterm == "while":
-        i = while_help(token_list,lines,INSTRUCTION,i)-1
+        i = while_help(token_list,lines,INSTRUCTION,i)
     else:
         INSTRUCTION.append(token_list)
         i+=1
