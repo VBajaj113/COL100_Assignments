@@ -10,13 +10,6 @@ UNARY_OPERATOR = ["-", "not"]
 WHILE_UN = [None, "NOT"]
 
 
-class Instructions:
-    def __init__(self):
-        self
-    
-    
-
-
 
 def while_help(token_list, lines, INSTRUCTION, i):
     n=len(lines)
