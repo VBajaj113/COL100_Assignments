@@ -8,20 +8,22 @@ BINARY_OPERATOR = ["+", "-", "*", "/", ">", "<",">=", "<=", "==", "!=", "and", "
 WHILE_BI = [None, None, None, None, "BLE", "BLE", "BLT", "BLT", "BE", "BE", "AND", "OR", None]
 UNARY_OPERATOR = ["-", "not"]
 WHILE_UN = [None, "NOT"]
-
+STR_BOOL = ['True', 'False']
+BOOL = [True, False]
 
 
 class Instructions:
     def __init__(self, token, tabs=0, type_s="while", address=-1, TABS = TABS, DATA = DATA):
-        self.exp = token
-        self.tabs = tabs
-        self.type = type_s
-        self.addr = address
-        self.tablist = TABS
-        self.datalist = DATA
+        #To initialise an object
+        self.exp = token        #stores the expression
+        self.tabs = tabs        #stores the tab number
+        self.type = type_s      #stores the type of the statement
+        self.addr = address     #stores the branching address
+        self.tablist = TABS     #stores the TABS list
+        self.datalist = DATA    #stores the DATA list
     
 
-    def __repr__(self):
+    def __repr__(self):     #For correct representation when printing the list
         if self.type == "branch":
             return self.type + " " + str(self.addr)
         elif self.type == "Expression":
@@ -31,23 +33,28 @@ class Instructions:
 
 
     def while_help(self, lines, INSTRUCTION, i):
+        #To help with the addition of branch and while statements correctly in INSTRUCTION
+        
         n = len(lines)
         nested = 0
         INSTRUCTION.append(self)
 
         j = i + 1
-        while j < n:
+        while j < n:    #Checks how many nested while loops are there
             if TABS[j] > TABS[i]:
                 if lines[j].split()[0] == "while":
                     nested+=1
             else:
                 break
             j += 1
-                    
+
+        if j == i + 1:  #When there is no statement in the while body (Wrong indent)
+            exit("Please enter the syntax in the correct format.")
+
         j = i + 1
         while j < n:
             if TABS[j] > TABS[i]:
-                if lines[j].split()[0] == "while":
+                if lines[j].split()[0] == "while":  #For handling the nested while loops
 
                     pointer = Instructions(lines[j].split(), self.tablist[j])
                     j = pointer.while_help(lines, INSTRUCTION, j)
@@ -65,6 +72,7 @@ class Instructions:
 
             else:
                 break
+
         self.addr = 1 + j + nested
         self.exp[-1]=str(1+j+nested)
         temp = Instructions([str(i)], 0, "branch", i)
@@ -103,11 +111,8 @@ class Instructions:
             else:
                 self.case2()
         
-        elif self.type=="BE":
-            if self.exp[2]=="!=":
-                self.case1()
-            else:
-                self.case_equal()
+        elif self.type == "BE":
+            self.case_equal()
         
         else:
             self.case4()
@@ -126,7 +131,10 @@ class Instructions:
         pass
 
     def case_equal(self):
-        pass
+        if self.exp[2]=="==":
+            self.exp[0] = "BEE"
+        return self.case1()
+
 
     
     def ispresentbool(self, element):
@@ -137,7 +145,7 @@ class Instructions:
 
     def ispresentint(self, element):  # Checks whether element is present in DATA
         for i in range(len(self.datalist)):
-            if self.datalist[i] == element:
+            if self.datalist[i] == element and type(self.datalist[i])==int:
                 return i
         return -1
 
@@ -159,21 +167,21 @@ class Instructions:
 
     def INTERPRET(self, exp, k):
         # Interprets the expressions
-        if exp[0] in WHILE_BI or exp[0] in WHILE_UN or self.type=="branch":
-            return self.execute(exp, k)
+        if self.type in WHILE_BI or self.type in WHILE_UN or self.type=="branch":
+            return self.while_run(exp, k)
 
         else:
         # Errors
             if len(exp) > 5 or len(exp) < 3:  # Not allowed lengths in this assignment
-                exit("Error: Please enter the expression in the specified syntax 1")
+                exit("Error: Please enter the expression in the specified syntax")
             elif exp[1] != "=":  # The variable is of multiple words
-                exit("Error: Please enter the expression in the specified syntax 2")
+                exit("Error: Please enter the expression in the specified syntax")
             # Not allowed operators
             elif len(exp) == 4 and exp[2] not in UNARY_OPERATOR:
-                exit("Error: Please enter the expression in the specified syntax 3")
+                exit("Error: Please enter the expression in the specified syntax")
             elif len(exp) == 5 and (exp[3] not in BINARY_OPERATOR or exp[2] in \
                 BINARY_OPERATOR or exp[4] in BINARY_OPERATOR):  # Not allowed expression when expression length is 5
-                exit("Error: Please enter the expression in the specified syntax 4")
+                exit("Error: Please enter the expression in the specified syntax")
 
             new_var = exp[0]  # Represents the variable
             if not self.variablecheck(new_var):
@@ -186,18 +194,18 @@ class Instructions:
                 # they are not present initially.
 
                 term = exp[i]
-                bool = False
+                boule = False
 
                 if term == "/":
                     exp[i] = "//"  # To work it with eval()
                 elif term in UNARY_OPERATOR or term in BINARY_OPERATOR:
                     continue
                 elif term == "True":
-                    bool = True
+                    boule = True
                     if self.ispresentbool(True) == -1:
                         self.datalist.append(True)
                 elif term == "False":
-                    bool = True
+                    boule = True
                     if self.ispresentbool(False) == -1:
                         self.datalist.append(False)
                 else:
@@ -221,7 +229,7 @@ class Instructions:
             except:
                 exit("Error: Please enter the expression in the specified syntax")
 
-            if bool:  # If the rhs is boolean
+            if boule:  # If the rhs is boolean
                 index2 = self.ispresentbool(value)
             else:
                 index2 = self.ispresentint(value)  # rhs is integer
@@ -242,20 +250,21 @@ class Instructions:
 
 
     def variable_value_special(self, expression):
+        boule = False
         for i in range(1, len(expression)-1):
             # Changes the variable in the expression to strings type indicating its value
             # and leaves the operators unchanged. Also adds the elements to DATA list if
             # they are not present initially.
 
             term = expression[i]
-            bool = False
+            boule = False
 
             if term == "True":
-                bool = True
+                boule = True
                 if self.ispresentbool(True) == -1:
                     self.datalist.append(True)
             elif term == "False":
-                bool = True
+                boule = True
                 if self.ispresentbool(False) == -1:
                     self.datalist.append(False)
             else:
@@ -271,26 +280,57 @@ class Instructions:
                     else:
                         # Changes the variables to their values
                         expression[i] = str(self.datalist[self.datalist[index][1]])
-        return expression
+        return expression, boule
 
 
-    def execute(self, exp, i):
-        temp = self.variable_value_special(exp[:])
-
-        if temp[0]=="BLE":
-            if int(temp[1])<=int(temp[2]):
-                return self.addr, True
+    def while_run(self, exp, i):
+        temp, boule = self.variable_value_special(exp[:])
+        if not boule:
+            if temp[0] == "BLE":
+                if int(temp[1]) <= int(temp[2]):
+                    return self.addr, True
+                else:
+                    return i+1, False
+            elif temp[0] == "BLT":
+                if int(temp[1]) < int(temp[2]):
+                    return self.addr, True
+                else:
+                    return i+1, False
+            elif temp[0] == "BE":
+                if (temp[1])==(temp[2]):
+                    return self.addr, True
+                else:
+                    return i+1, False
+            elif temp[0]=="BEE":
+                if (temp[1])==(temp[2]):
+                    return i + 1, False
+                else:
+                    return self.addr, True
             else:
-                return i+1, False
-        elif temp[0]=="BLT":
-            if int(temp[1])<int(temp[2]):
-                return self.addr, True
-            else:
-                return i+1, False
-        elif temp[0]=="BE":
-            return
+                return int(temp[-1]),False
         else:
-            return int(temp[-1]),False
+            if temp[0] == "BLE":
+                if BOOL[STR_BOOL.index(temp[1])] <= BOOL[STR_BOOL.index(temp[2])]:
+                    return self.addr, True
+                else:
+                    return i+1, False
+            elif temp[0] == "BLT":
+                if BOOL[STR_BOOL.index(temp[1])] < BOOL[STR_BOOL.index(temp[2])]:
+                    return self.addr, True
+                else:
+                    return i+1, False
+            elif temp[0] == "BE":
+                if BOOL[STR_BOOL.index(temp[1])]==BOOL[STR_BOOL.index(temp[2])]:
+                    return self.addr, True
+                else:
+                    return i+1, False
+            elif temp[0]=="BEE":
+                if BOOL[STR_BOOL.index(temp[1])]==BOOL[STR_BOOL.index(temp[2])]:
+                    return i + 1, False
+                else:
+                    return self.addr, True
+            else:
+                return int(temp[-1]),False
 
 
     def OUTPUT(self):  # For printing
@@ -335,6 +375,8 @@ while i<n:
     fterm = token_list[0]
 
     if fterm == "while":
+        if token_list[-1] != ":":
+            exit("Please enter the syntax in the correct format.")
         pointer = Instructions(token_list, TABS[i])
         i = pointer.while_help(lines, INSTRUCTION, i)
     else:
@@ -355,8 +397,9 @@ while i < len(INSTRUCTION):
         pointer.exp[0] = pointer.type
     expression = pointer.exp[:]
     
-    i, bool = pointer.INTERPRET(expression, i)
-    if bool==True:
+    i, boule = pointer.INTERPRET(expression, i)
+    if pointer.type == "branch":
         pointer.OUTPUT()
 
 pointer.OUTPUT()
+
