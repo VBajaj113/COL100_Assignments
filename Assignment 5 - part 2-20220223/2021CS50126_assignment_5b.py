@@ -1,6 +1,6 @@
 from sys import exit  # For stopping the program when necessary
 
-
+#Required lists
 DATA = []
 INSTRUCTION = []
 TABS = []
@@ -13,6 +13,8 @@ BOOL = [True, False]
 
 
 class Instructions:
+    #To handle all operations and to make the instruction list
+
     def __init__(self, token, tabs=0, type_s="while", address=-1, TABS = TABS, DATA = DATA):
         #To initialise an object
         self.exp = token        #stores the expression
@@ -24,17 +26,27 @@ class Instructions:
     
 
     def __repr__(self):     #For correct representation when printing the list
-        if self.type == "branch":
-            return self.type + " " + str(self.addr)
-        elif self.type == "Expression":
-            return " ".join(self.exp)
-        else:
-            return " ".join([self.type, self.exp[1], self.exp[2], str(self.addr)])
+        try:
+            if self.type == "branch":
+                return self.type + " " + str(self.addr)
+            elif self.type == "Expression":
+                return " ".join(self.exp)
+            else:
+                return " ".join([self.type, self.exp[1], self.exp[2], str(self.addr)])
+        except:
+            exit("Please use correct syntax.")
 
 
     def while_help(self, lines, INSTRUCTION, i):
         #To help with the addition of branch and while statements correctly in INSTRUCTION
+        #uses recursion for nested while loops
         
+        #Inputs: 
+        #lines, the list of statements, the INSTRUCTION list and the index i of while loop
+
+        #Returns:
+        #The index where the while loop ended
+
         n = len(lines)
         nested = 0
         INSTRUCTION.append(self)
@@ -49,30 +61,32 @@ class Instructions:
             j += 1
 
         if j == i + 1:  #When there is no statement in the while body (Wrong indent)
-            exit("Please enter the syntax in the correct format.")
+            exit("Error: Please enter the syntax in the correct format.")
 
         j = i + 1
         while j < n:
             if TABS[j] > TABS[i]:
-                if lines[j].split()[0] == "while":  #For handling the nested while loops
+                if lines[j].split()[0] == "while":  #Identified nested loop
 
                     pointer = Instructions(lines[j].split(), self.tablist[j])
                     j = pointer.while_help(lines, INSTRUCTION, j)
 
-                    if j < n and TABS[j] <= TABS[i]:
-                        self.addr = 1+len(INSTRUCTION)
+                    if j < n and TABS[j] <= TABS[i]:        #If the outer loop ends on the same line
+                        self.addr = 1+len(INSTRUCTION)      #as the nested one, the to not skip a line
                         self.exp[-1] = str(1+len(INSTRUCTION))
                         temp = Instructions([str(i)], 0, "branch", i)
                         INSTRUCTION.append(temp)
                         return j
                 else:
+                    #Adds the normal expressions to the list
                     pointer = Instructions(lines[j].split(),self.tablist[j],"Expression")
                     INSTRUCTION.append(pointer)
                     j+=1
 
             else:
                 break
-
+        
+        #Adds the branch statement with correct attributes
         self.addr = 1 + j + nested
         self.exp[-1]=str(1+j+nested)
         temp = Instructions([str(i)], 0, "branch", i)
@@ -81,75 +95,128 @@ class Instructions:
 
 
     def rectify(self, INSTRUCTIONS):
+        #Changes the while statements in the list to BLE,BLT,BE types
+
+        #Input: The instruction list
+
+        #Output = None
+
         for i in range(len(INSTRUCTIONS)):
             pointer = INSTRUCTION[i]
-            if pointer.type =="while":
+            if pointer.type =="while":  #Identified the while statement
                 if len(pointer.exp)==5:
-                    pointer.type = WHILE_BI[BINARY_OPERATOR.index(pointer.exp[2])]
-                    pointer.binary_correct()
+                    try:
+                        pointer.type = WHILE_BI[BINARY_OPERATOR.index(pointer.exp[2])]
+                        pointer.binary_correct()    #Helper funtion for handling the long case
+                    except:
+                        exit("Error: Please use correct syntax.")
 
                 elif len(pointer.exp)==4:
-                    pointer.exp[0]=WHILE_UN[UNARY_OPERATOR.index(pointer.exp[1])]
+                    try:
+                        pointer.exp[0]=WHILE_UN[UNARY_OPERATOR.index(pointer.exp[1])]
+                    except:
+                        exit("Error: Please use correct syntax.")
                 
                 elif len(pointer.exp)==3:
                     pointer.exp[0]="Expression"
                         
                 else:
-                    exit()  #raise error
+                    exit("Error: Please use correct syntax")  #raise error
     
 
     def binary_correct(self):
+        #Corrects the while statement in the instructions by calling more helper functions
+
+        #Input: the self pointer of the while statement
+
+        #Output: None
+
         if self.type=="BLE":
             if self.exp[2]==">":
                 self.case1()
             else:
-                self.case2()
+                self.case2()    #Need to exchange the variables
         
         elif self.type=="BLT":
             if self.exp[2]==">=":
                 self.case1()
             else:
-                self.case2()
+                self.case2()    #Need to exchange the variables
         
         elif self.type == "BE":
             self.case_equal()
         
         else:
-            self.case4()
+            self.case4()    #Made to handle and, or etc, but now handles errors
 
 
     def case1(self):
+        #Changes the expression of the while statement as required
+
+        #Input: The self pointer of the while statement
+
+        #Output: None
+
         self.exp[2]=self.exp[3]
         self.exp[3]=self.exp[4]
-        self.exp=self.exp[:-1]
+        self.exp=self.exp[:-1]      #Removes the semicolon
 
     def case2(self):
-        self.case1()
-        self.exp[1], self.exp[2] = self.exp[2], self.exp[1]
+        #Changes the expression of the while statement as required
 
-    def case4(self):
-        pass
+        #Input: The self pointer of the while statement
+
+        #Output: None
+
+        self.case1()
+        self.exp[1], self.exp[2] = self.exp[2], self.exp[1] #Exchanges the variables
+
+    def case4(self):    #Error case
+        exit("Error: Please enter the syntax in the correct format.")
 
     def case_equal(self):
+        #Specially for BE, as there were some problems in implementing it the original way
+
+        #Input: Slef statement of the while loop
+
+        #output: calls the case 1 for further improvement after working
+
         if self.exp[2]=="==":
             self.exp[0] = "BEE"
         return self.case1()
 
-
     
     def ispresentbool(self, element):
+        #To identify that the datalist has the element in boolean form
+
+        #Input: The element tot be found
+
+        #Output: The index of the element, if found in the data list
+
         for i in range(len(self.datalist)):
             if self.datalist[i] == element and type(self.datalist[i]) == bool:
                 return i
         return -1
 
-    def ispresentint(self, element):  # Checks whether element is present in DATA
+    def ispresentint(self, element):
+        #To identify that the datalist has the element in integer form
+
+        #Input: The element to be found
+
+        #Output: The index of the element, if found in the data list
+
         for i in range(len(self.datalist)):
             if self.datalist[i] == element and type(self.datalist[i])==int:
                 return i
         return -1
 
-    def ispresentintuple(self, element):    # Checks whether element is present in a tuple in DATA
+    def ispresentintuple(self, element):
+        #To identify that the datalist has the element in tuple form
+
+        #Input: The element to be found
+
+        #Output: The index of the element value, if found in the data list
+
         for i in range(len(self.datalist)):
             try:
                 if self.datalist[i][0] == element:
@@ -158,7 +225,13 @@ class Instructions:
                 continue
         return -1
 
-    def variablecheck(self, s):  # Checks whether name of variable contains only letters
+    def variablecheck(self, s):
+        #Checks that the variable name only contains letters
+
+        #Input: The name to be checked
+
+        #Output: True if the name is correct, False otherwise
+
         for i in s:
             if ord(i) < 65 or ord(i) > 122 or (ord(i) > 90 and ord(i) < 97):
                 return False
@@ -166,8 +239,16 @@ class Instructions:
 
 
     def INTERPRET(self, exp, k):
-        # Interprets the expressions
+        #Interprets the expressions
+        
+        #Input: The expression to be evaluated and the index at which the exp is in instruction list
+
+        #Output: The next index where the index should be moved, along with calculating the expression
+        #and changing the data list accordingly along with checking the fact that the loop iteration
+        #is completed or not
+
         if self.type in WHILE_BI or self.type in WHILE_UN or self.type=="branch":
+            #For interpreting the while and brach statements
             return self.while_run(exp, k)
 
         else:
@@ -246,11 +327,18 @@ class Instructions:
             else:
                 self.datalist[index] = (new_var, index2)
 
-            return  k+1, False
+            return  k+1, False  #The next index to be moved to and whether loop iteration is done
 
 
     def variable_value_special(self, expression):
+        #Checks the variable values for the while loops
+
+        #Input: The expression term for which value are to be substituted
+
+        #Returns the updated expression and the boolean tellin whether while iteration is completed
+
         boule = False
+
         for i in range(1, len(expression)-1):
             # Changes the variable in the expression to strings type indicating its value
             # and leaves the operators unchanged. Also adds the elements to DATA list if
@@ -284,56 +372,77 @@ class Instructions:
 
 
     def while_run(self, exp, i):
+        #To help running the execute funtion, calculates the next position of the index from
+        #the branch and while statements
+
+        #Inputs: the expression to be evakuated and the current index
+
+        #Output: the new index and whether while loop is completed or not
+
         temp, boule = self.variable_value_special(exp[:])
-        if not boule:
+
+        if not boule:      #Implies the elements are not boolean 
+            #Checking case wise
             if temp[0] == "BLE":
                 if int(temp[1]) <= int(temp[2]):
                     return self.addr, True
                 else:
                     return i+1, False
+
             elif temp[0] == "BLT":
                 if int(temp[1]) < int(temp[2]):
                     return self.addr, True
                 else:
                     return i+1, False
+
             elif temp[0] == "BE":
                 if (temp[1])==(temp[2]):
                     return self.addr, True
                 else:
                     return i+1, False
+
             elif temp[0]=="BEE":
                 if (temp[1])==(temp[2]):
                     return i + 1, False
                 else:
                     return self.addr, True
-            else:
+
+            else:   #Branch statement
                 return int(temp[-1]),False
+
         else:
             if temp[0] == "BLE":
                 if BOOL[STR_BOOL.index(temp[1])] <= BOOL[STR_BOOL.index(temp[2])]:
                     return self.addr, True
                 else:
                     return i+1, False
+                    
             elif temp[0] == "BLT":
                 if BOOL[STR_BOOL.index(temp[1])] < BOOL[STR_BOOL.index(temp[2])]:
                     return self.addr, True
                 else:
                     return i+1, False
+
             elif temp[0] == "BE":
                 if BOOL[STR_BOOL.index(temp[1])]==BOOL[STR_BOOL.index(temp[2])]:
                     return self.addr, True
                 else:
                     return i+1, False
+
             elif temp[0]=="BEE":
                 if BOOL[STR_BOOL.index(temp[1])]==BOOL[STR_BOOL.index(temp[2])]:
                     return i + 1, False
                 else:
                     return self.addr, True
+
             else:
                 return int(temp[-1]),False
 
 
-    def OUTPUT(self):  # For printing
+    def OUTPUT(self):  
+        #For printing the output after every iteration
+
+        #Returns Nothing
         GARBAGE = []
         USED_INDEX = []  # Stores the values of indices which are not garbage
 
@@ -353,16 +462,16 @@ class Instructions:
         print(GARBAGE)
 
 
+#-------------------------------------------------------------------------------------#
+#Taking input from the file
 
+lines = []          #Stores the lines to be evaluated
 
-
-
-
-lines = []
 with open('D:\IITD\Current\COL100\Assignment\input_file.txt') as f:
     lines = f.readlines()
 
 for i in range(len(lines)):
+    #Added the value of the tabs in the tab list
     statement = lines[i]
     TABS.append(max(statement.count("    "), statement.count("\t")))
 
@@ -370,6 +479,7 @@ for i in range(len(lines)):
 n = len(lines)
 i = 0
 while i<n:
+    #Updates the Instruction List
     tabs = TABS[i]
     token_list = lines[i].split()
     fterm = token_list[0]
@@ -384,15 +494,19 @@ while i<n:
         INSTRUCTION.append(pointer)
         i+=1
 
-pointer.rectify(INSTRUCTION)
+pointer.rectify(INSTRUCTION)    #Updates the types of the while statements
+
 print(INSTRUCTION)
 
 
+#----------------------------------------------------------------------------#
 #Execution
 
-i=0
-while i < len(INSTRUCTION):
+i=0     #counter
+
+while i < len(INSTRUCTION): #Execution
     pointer = INSTRUCTION[i]
+    
     if pointer.exp[0]=="while":
         pointer.exp[0] = pointer.type
     expression = pointer.exp[:]
@@ -401,5 +515,5 @@ while i < len(INSTRUCTION):
     if pointer.type == "branch":
         pointer.OUTPUT()
 
-pointer.OUTPUT()
+pointer.OUTPUT()        #The final output after running thrugh all the instruction list
 
